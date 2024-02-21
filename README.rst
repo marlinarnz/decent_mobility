@@ -14,5 +14,5 @@ Contents:
       $ python trips.py
 
 
-© 2024 `contributors <https://github.com/marlinarnz/decent_mobility_infrastructure/graphs/contributors>`.
+© 2024 `contributors <https://github.com/marlinarnz/decent_mobility_infrastructure/graphs/contributors>`_.
 Code licensed under GNU GPL v3.0 unless otherwise specified.

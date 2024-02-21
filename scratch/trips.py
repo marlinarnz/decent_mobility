@@ -14,8 +14,11 @@ from genno import Computer, Key, Quantity
 # These are illustrative only. For the project we should select dimensions as needed and
 # code lists based on literature.
 
-# Regions, using ISO 3166-1 alpha-2 for example
-r = ["JP", "BR", "IN"]
+# Geography, using ISO 3166-1 alpha-2 country codes for example, but these could also be
+# other geographical units such as functional urban areas. Implicitly the code below
+# considers one representative agent (the mean or median individual) within each `geo`,
+# but would function the same with a collection of diverse agents.
+geo = ["JP", "BR", "IN"]
 
 # Trip types or categories
 tt = [
@@ -28,7 +31,7 @@ tt = [
 # Trip mode
 tm = ["active", "motorized"]
 
-DIMS = {"r": r, "tt": tt, "tm": tm}  # All dimensions used in this file
+DIMS = {"geo": geo, "tt": tt, "tm": tm}  # All dimensions used in this file
 
 # Shorthand functions
 
@@ -52,32 +55,32 @@ c = Computer()
 # Threshold used in prior DLE work
 c.add("base distance:", Quantity(10000, units="km / a"))
 
-# Urban population fraction [dimensionless] as an example of an attribute with an `r`
+# Urban population fraction [dimensionless] as an example of an attribute with a `geo`
 # dimension
-c.add("urban frac:r", q([0.9, 0.5, 0.75], dims="r"))
+c.add("urban frac:geo", q([0.9, 0.5, 0.75], dims="geo"))
 
 
 def scale_by_urban_frac(qty: Quantity, urban_frac: Quantity) -> Quantity:
-    """Adjust `qty` (scalar) based on urban population fraction (dimension `r`).
+    """Adjust `qty` (scalar) based on urban population fraction (dimension `geo`).
 
     The functional form and coefficients mean nothing; simply for illustration. The
-    result has the same dimensionality as `urban_frac`; the value for r="JP" is used as
-    a reference.
+    result has the same dimensionality as `urban_frac`; the value for geo="JP" is used
+    as a reference.
     """
-    return qty * (1 + 0.4 * (urban_frac.sel(r="JP").item() - urban_frac))
+    return qty * (1 + 0.4 * (urban_frac.sel(geo="JP").item() - urban_frac))
 
 
 # Produces distances in the range (10000, 11600) km
-k = Key("distance 1:r")
-c.add(k, scale_by_urban_frac, "base distance:", "urban frac:r")
+k = Key("distance 1:geo")
+c.add(k, scale_by_urban_frac, "base distance:", "urban frac:geo")
 show(k)
 
 
 # 2. Adding trips
 #
 # Alternate expression of a decent living standard by number of trips. In this example,
-# there is no r dimension; values are thus assumed the same for each `r`, but they need
-# not be. These numbers could be drawn from NHTS or other travel surveys.
+# there is no `geo` dimension; values are thus assumed the same for each `geo`, but they
+# need not be. These numbers could be drawn from NHTS or other travel surveys.
 trips = q(
     [
         52 * 5 * 2,  # work:  52 weeks × 5 days/week × 2 trips/day
@@ -92,17 +95,18 @@ c.add("trips:tt", trips)
 # Length of a single trip of each trip_type in the reference region
 c.add("trip length:tt:JP", q([10, 10, 30, 232], dims="tt", units="km"))
 
-# Scale the trip lengths by region. The function is the same one used above, but instead
-# of scaling the 0-d "base distance" to get 1-D, we scale a 1-D quantity and get 2-D.
-k = Key("trip length:r-tt")
-c.add(k, scale_by_urban_frac, "trip length:tt:JP", "urban frac:r")
+# Scale the trip lengths for each `geo`. The function is the same one used above, but
+# instead of scaling the 0-d "base distance" to get 1-D, we scale a 1-D quantity and get
+# 2-D.
+k = Key("trip length:geo-tt")
+c.add(k, scale_by_urban_frac, "trip length:tt:JP", "urban frac:geo")
 show(k)
 
 # Compute total distance
-k = Key("distance 2:r-tt")
-c.add(k, "mul", "trips:tt", "trip length:r-tt")
+k = Key("distance 2:geo-tt")
+c.add(k, "mul", "trips:tt", "trip length:geo-tt")
 
-# Drop the `tt` dimension (but retain `r`) to indicate a partial sum across trip_types
+# Drop the `tt` dimension (but retain `geo`) to indicate a partial sum across trip_types
 show(k / "tt")
 
 
@@ -117,21 +121,21 @@ show(k / "tt")
 
 
 def same_distance_tourism(trip_length: Quantity) -> Quantity:
-    """tt="tourism" all the same as r="JP"; all others distinct as scaled."""
+    """tt="tourism" all the same as geo="JP"; all others distinct as scaled."""
     from genno.operator import concat
 
     return concat(
         trip_length.sel({"tt": tt[:-1]}),
-        trip_length.sel({"r": "JP", "tt": ["tourism"]}).expand_dims({"r": r}),
+        trip_length.sel({"geo": "JP", "tt": ["tourism"]}).expand_dims({"geo": geo}),
     )
 
 
-tl2 = Key("trip length 2:r-tt")
-c.add(tl2, same_distance_tourism, "trip length:r-tt")
+tl2 = Key("trip length 2:geo-tt")
+c.add(tl2, same_distance_tourism, "trip length:geo-tt")
 show(tl2)
 
 # Same as above
-k = Key("distance 3:r-tt")
+k = Key("distance 3:geo-tt")
 c.add(k, "mul", "trips:tt", tl2)
 show(k / "tt")
 
@@ -159,13 +163,14 @@ c.add("trips:tm-tt:dense TOD", q([[2, 2, 0.2, 0.2], [0, 0, 30, 232]], dims="tm t
 
 # Not the main focus of DLE, but this person takes excess leisure and tourism trips,
 # perhaps driving up the demand for energy/low-carbon transport equipment, thereby
-# making it less affordable
+# making it less affordable.
 c.add("frequent flyer:tt", "add", "trips:tt", q([0, 0, 52, 10], dims="tt"))
 
 # 5. Add other outputs: time, money
 #
 # Here these have dimension `tt`, but they more likely would have `tm` and other
-# dimensions
+# dimensions. These could be then compared to reference values: Marchetti & Zahavi's
+# constants (or an empirical range); expenditures.
 
 pint.get_application_registry().define("USD = [money]")
 c.add("price:tt", q([0.1, 0.15, 0.2, 1.0], dims="tt", units="USD/km"))
@@ -173,11 +178,11 @@ c.add("speed:tt", q([50.0, 50.0, 40.0, 100.0], dims="tt", units="km/h"))
 
 # Total travel time = distance / speed
 k_distance = k
-k_time = Key("time:r-tt")
+k_time = Key("time:geo-tt")
 c.add(k_time, "div", k_distance, "speed:tt")
 
 # Total travel cost = distance * price
-k_cost = Key("cost:r-tt")
+k_cost = Key("cost:geo-tt")
 c.add(k_cost, "mul", k_distance, "price:tt")
 
 # Compute distance, time, and cost at once

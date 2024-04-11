@@ -67,14 +67,17 @@ class Persona:
         """
         return self.trips
 
-    def compute_trips_random(self, alternatives: List['Alternative'], modes_unavailable=[]):
+    def compute_trips(self, alternatives: List['Alternative'], method: str, modes_unavailable=[]):
         """
-        Compute a random set of trips from the given list of alternatives
+        Compute a set of trips from the given list of alternatives
         that fulfills the persona's trips demand, saved into the trips attribute.
         Certain modes can be marked unavailable and won't be chosen.
 
         Args:
             alternatives (List[Alternative]): A list of Alternative objects.
+            method (str): "random" chooses alternatives randomly.
+                          "min_energy_typ_time" minimizes energy demand while not diverging
+                          more than 10 minutes from the persona's typical travel time.
             modes_unavailable (List[str]): A list of mode names that are not available.
 
         Raises:
@@ -90,9 +93,19 @@ class Persona:
             if not destination_alternatives:
                 raise ValueError(f"No alternative found for destination: {destination}")
 
-            # Randomly select trips from available alternatives
-            selected_alternatives = random.choices(
-                destination_alternatives, k=count)
+            # Select trips from available alternatives based on the given method
+            if method == 'random':
+                selected_alternatives = random.choices(
+                    destination_alternatives, k=count)
+            elif method == 'min_energy_typ_time':
+                selected_alternatives = self._select_min_energy_typ_time(
+                    destination_alternatives, count)
+            else:
+                raise ValueError(method + " is not a valid method. Choose 'random' or 'min_energy_typ_time'")
 
             # Update trips dictionary with selected alternatives
             self.trips[destination] = list(selected_alternatives)
+
+
+    def _select_min_energy_typ_time(self, destination_alternatives, count):
+        raise NotImplementedError("Not yet implemented")

@@ -21,7 +21,7 @@ class TestPersona(unittest.TestCase):
         self.assertEqual(self.persona.get_demand(), self.trips_data)
     
     def test_compute_trips_random(self):
-        self.persona.compute_trips_random(self.alternatives)
+        self.persona.compute_trips(self.alternatives, 'random')
         trips = self.persona.get_trips()
         for dest, count in self.trips_data.items():
             self.assertEqual(len(trips[dest]), count, dest)
@@ -29,7 +29,7 @@ class TestPersona(unittest.TestCase):
                 self.assertEqual(alt.destination, dest, alt)
     
     def test_compute_trips_random_car_unavailable(self):
-        self.persona.compute_trips_random(self.alternatives, ['car'])
+        self.persona.compute_trips(self.alternatives, 'random', ['car'])
         trips = self.persona.get_trips()
         for dest, count in self.trips_data.items():
             self.assertEqual(len(trips[dest]), count, dest)
@@ -38,7 +38,11 @@ class TestPersona(unittest.TestCase):
     
     def test_compute_trips_random_all_unavailable(self):
         with self.assertRaises(ValueError):
-            self.persona.compute_trips_random(self.alternatives, ['car', 'bicycle', 'bus'])
+            self.persona.compute_trips(self.alternatives, 'random', ['car', 'bicycle', 'bus'])
+    
+    def test_compute_trips_wrong_method(self):
+        with self.assertRaises(ValueError):
+            self.persona.compute_trips(self.alternatives, 'blabla')
 
 if __name__ == "__main__":
     unittest.main()

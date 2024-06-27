@@ -1,5 +1,7 @@
 import random
 from typing import Dict, List
+#from scipy.optimize import milp, Bounds, LinearConstraint
+#import numpy as np
 
 from alternative import Alternative
 
@@ -107,5 +109,53 @@ class Persona:
             self.trips[destination] = list(selected_alternatives)
 
 
-    def _select_min_energy_typ_time(self, destination_alternatives, count):
+    def _select_min_energy_typ_time(self, alternatives: List['Alternative'], count: int):
         raise NotImplementedError("Not yet implemented")
+        """
+        Solves an optimization problem to select a given number of alternatives
+        from a set, minimizing total energy demand, while staying within bounds
+        of the typical travel time.
+
+        Args:
+            alternatives : list of alternatives with 'time' and 'energy_demand'
+            count (int): Number of alternatives to choose from the set
+
+        Returns:
+            The optimal selection of alternatives with lowest energy demand
+            while in line with time requirements
+
+        Notes:
+        The function assumes that the total time and energy demand are linearly
+        related to the selection of alternatives. If the relationship is more
+        complex, the formulation of the problem may need adjustment.
+        """
+        # Number of alternatives
+        n = len(alternatives)
+        # Coefficients for the objective function (minimize energy demand)
+        c = [alternative.energy_demand for alternative in alternatives]
+        # Inequality constraints matrix
+        A = [[alternative.time for alternative in alternatives]]
+        # Inequality constraints vector
+        b = [5, 10] # Total time should be between 5 and 10
+        # Equality constraints matrix
+        A_eq = [[1 for _ in range(n)]] # Sum of all alternatives should be equal to count
+        # Equality constraints vector
+        b_eq = [count]
+        # Bounds for the variables (0 <= x <= 1 for each alternative)
+        lb = [0 for _ in range(n)]
+        ub = [1 for _ in range(n)]
+        variable_bounds = Bounds(lb, ub)
+        # Constraints
+        constraints = LinearConstraint(A, -np.inf, b)
+        
+        # Solve the mixed-integer linear programming problem
+        res = milp(
+            c, 
+            integrality=[1 for _ in range(n)], # All variables are integers
+            bounds=variable_bounds,
+            constraints=constraints,
+            options={"disp": True}
+        )
+        
+        # Return the solution
+        return res

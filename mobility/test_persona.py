@@ -40,6 +40,14 @@ class TestPersona(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.persona.compute_trips(self.alternatives, 'random', ['car', 'bicycle', 'bus'])
     
+    def test_compute_trips_min_energy_typ_time(self):
+        self.persona.compute_trips(self.alternatives, 'min_energy_typ_time')
+        trips = self.persona.get_trips()
+        for dest, count in self.trips_data.items():
+            self.assertEqual(len(trips[dest]), count, dest)
+            for alt in trips[dest]:
+                self.assertEqual(alt.destination, dest, alt)
+    
     def test_compute_trips_wrong_method(self):
         with self.assertRaises(ValueError):
             self.persona.compute_trips(self.alternatives, 'blabla')

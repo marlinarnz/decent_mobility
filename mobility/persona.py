@@ -1,9 +1,10 @@
 import random
 from typing import Dict, List
-#from scipy.optimize import milp, Bounds, LinearConstraint
-#import numpy as np
 
-from alternative import Alternative
+# from scipy.optimize import milp, Bounds, LinearConstraint
+# import numpy as np
+from .alternative import Alternative
+
 
 class Persona:
     """
@@ -59,7 +60,7 @@ class Persona:
         """
         return self.demand
 
-    def get_trips(self) -> Dict[str, List['Alternative']]:
+    def get_trips(self) -> Dict[str, List["Alternative"]]:
         """
         Get the dictionary containing information about trips taken by the persona.
 
@@ -69,7 +70,9 @@ class Persona:
         """
         return self.trips
 
-    def compute_trips(self, alternatives: List['Alternative'], method: str, modes_unavailable=[]):
+    def compute_trips(
+        self, alternatives: List["Alternative"], method: str, modes_unavailable=[]
+    ):
         """
         Compute a set of trips from the given list of alternatives
         that fulfills the persona's trips demand, saved into the trips attribute.
@@ -88,28 +91,36 @@ class Persona:
 
         for destination, count in self.demand.items():
             # Filter alternatives that match the destination
-            destination_alternatives = [alt for alt in alternatives
-                                        if alt.destination == destination
-                                        and not alt.mode in modes_unavailable]
+            destination_alternatives = [
+                alt
+                for alt in alternatives
+                if alt.destination == destination and not alt.mode in modes_unavailable
+            ]
 
             if not destination_alternatives:
                 raise ValueError(f"No alternative found for destination: {destination}")
 
             # Select trips from available alternatives based on the given method
-            if method == 'random':
+            if method == "random":
                 selected_alternatives = random.choices(
-                    destination_alternatives, k=count)
-            elif method == 'min_energy_typ_time':
+                    destination_alternatives, k=count
+                )
+            elif method == "min_energy_typ_time":
                 selected_alternatives = self._select_min_energy_typ_time(
-                    destination_alternatives, count)
+                    destination_alternatives, count
+                )
             else:
-                raise ValueError(method + " is not a valid method. Choose 'random' or 'min_energy_typ_time'")
+                raise ValueError(
+                    method
+                    + " is not a valid method. Choose 'random' or 'min_energy_typ_time'"
+                )
 
             # Update trips dictionary with selected alternatives
             self.trips[destination] = list(selected_alternatives)
 
-
-    def _select_min_energy_typ_time(self, alternatives: List['Alternative'], count: int):
+    def _select_min_energy_typ_time(
+        self, alternatives: List["Alternative"], count: int
+    ):
         raise NotImplementedError("Not yet implemented")
         """
         Solves an optimization problem to select a given number of alternatives
@@ -136,9 +147,11 @@ class Persona:
         # Inequality constraints matrix
         A = [[alternative.time for alternative in alternatives]]
         # Inequality constraints vector
-        b = [5, 10] # Total time should be between 5 and 10
+        b = [5, 10]  # Total time should be between 5 and 10
         # Equality constraints matrix
-        A_eq = [[1 for _ in range(n)]] # Sum of all alternatives should be equal to count
+        A_eq = [
+            [1 for _ in range(n)]
+        ]  # Sum of all alternatives should be equal to count
         # Equality constraints vector
         b_eq = [count]
         # Bounds for the variables (0 <= x <= 1 for each alternative)
@@ -147,15 +160,15 @@ class Persona:
         variable_bounds = Bounds(lb, ub)
         # Constraints
         constraints = LinearConstraint(A, -np.inf, b)
-        
+
         # Solve the mixed-integer linear programming problem
         res = milp(
-            c, 
-            integrality=[1 for _ in range(n)], # All variables are integers
+            c,
+            integrality=[1 for _ in range(n)],  # All variables are integers
             bounds=variable_bounds,
             constraints=constraints,
-            options={"disp": True}
+            options={"disp": True},
         )
-        
+
         # Return the solution
         return res

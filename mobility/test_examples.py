@@ -49,3 +49,6 @@ def test_example0():
     assert True is a.has_decent_mobility()
     # Universal decent mobility is achieved
     assert True is m.universal_decent_mobility()
+
+    # Agent's total travel distance is computed
+    assert 10.0 == a.total_distance()

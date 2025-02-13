@@ -10,7 +10,7 @@ Contents:
   - ``retreat.py``: Code from 2012-12-09 writing retreat.
     Use ``python mobility/retreat.py`` for a demonstration.
 
-  - ``persona.py`` and ``alternative.py``: Code that simulates mobility choices of a ``persona`` that has several ``alternative``s for satisfying their "decent" mobility needs.
+  - ``persona.py`` and ``alternative.py``: Code that simulates mobility choices of a ``persona`` that has several ``alternative`` for satisfying their "decent" mobility needs.
     Use ``python mobility/test_persona.py`` for a demonstration.
 
   - ``scratch/``: temporary and working files.

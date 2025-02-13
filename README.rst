@@ -7,7 +7,7 @@ Contents:
 
 - ``mobility/``: A Python module.
 
-  - ``retreat.py``: Code from 2012-12-09 writing retreat.
+  - ``retreat.py``: Code from 2024-12-09 writing retreat.
     Use ``python mobility/retreat.py`` for a demonstration.
 
   - ``persona.py`` and ``alternative.py``: Code that simulates mobility choices of a ``persona`` that has several ``alternative`` for satisfying their "decent" mobility needs.

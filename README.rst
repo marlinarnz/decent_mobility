@@ -5,6 +5,8 @@ An EDITS 2024 fast-track project.
 
 Contents:
 
+- ``Seville``: An updated, improved version of the disaggregated modelling in ``Mauritius`` for the city of Seville and its functional urban area (FUA). Run the network generation notebooks and generate results in the ``decent_mobility_modelling_dynamic`` notebook.
+
 - ``Mauritius``: Contains a simplified activity-based model for two examplary regions on Mauritius, as showcased in the [corresponding scientific paper](https://doi.org/10.1016/j.erss.2025.104306). Contains a description on how to run the model.
 
 - ``mobility/``: An experimental Python module.
@@ -24,5 +26,5 @@ Contents:
         $ python trips.py
 
 
-© 2024–2025 `contributors <https://github.com/marlinarnz/decent_mobility_infrastructure/graphs/contributors>`_.
+© 2024–2026 `contributors <https://github.com/marlinarnz/decent_mobility/graphs/contributors>`_.
 Code licensed under GNU GPL v3.0 unless otherwise specified.
